@@ -192,7 +192,7 @@ def main(argv):
         __saveConfiguration(config, config_file)
         current_config = config[configuration]
     
-    if log_file != '':
+    if current_config['LOG'] != '':
         sys.stdout = Logger(current_config['LOG'])
     
     log_reader = LogReader.LogReader(logging, current_config['WARN'])
