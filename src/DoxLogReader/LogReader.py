@@ -80,7 +80,19 @@ class LogReader(object):
         '''
         
         retval = False
-        test = re.compile('(?P<full_path>.+):\d+: warning: Compound\s+(?P<member_name>.+) is not documented', re.IGNORECASE)
+        test = re.compile('''
+                          (?P<full_path>                  # Start capturing a group called full_path
+                            .+                            #   It consists of one or more characters of any kind
+                          )                               # End group
+                          :                               # A literal colon
+                          \d+                             # One or more numbers
+                          :                               # A literal colon
+                          \swarning:\sCompound\s+         # An almost static string
+                          (?P<member_name>                # Start capturing a group called member_name
+                            .+                            #   It consists of one or more characters of any kind
+                          )                               # End group
+                          \sis\snot\sdocumented''',       # And an almost static string to end the line
+                          re.IGNORECASE|re.VERBOSE)       # Let's not worry about case, because it seems to differ between Doxygen versions
         m = test.match(line)
         if m:
             srcfile = os.path.basename(str(m.group('full_path')))
@@ -102,7 +114,27 @@ class LogReader(object):
         
         '''
         retval = False
-        test = re.compile('(?P<full_path>.+):\d+:\s+Warning:\s+Member\s+(?P<member_name>.+) \((?P<member_type>%s)\) of file\s+(?P<filename>.+)\s+is not documented' % (self.__MEMBER_TYPES), re.IGNORECASE)
+        test = re.compile('''
+                          (?P<full_path>.+)                               # Line starts with full path and file name
+                          :
+                          \d+
+                          :
+                          \s+Warning:\s+Member\s+                       # Then a line number and static string
+                          (?P<member_name>
+                            .+
+                          )                                # Member name
+                          \s
+                          \(                                               # Space and open parentheses
+                          (?P<member_type>
+                            %s
+                          )                                # Member type which is matched with self.__MEMBER_TYPES
+                          \)
+                          \sof\sfile\s+                                    # Static string
+                          (?P<filename>
+                            .+
+                          )                                   # File name again
+                          \s+is\snot\sdocumented''' % (self.__MEMBER_TYPES), # And a static string to end the line
+                          re.IGNORECASE|re.VERBOSE)                          # Let's not worry about case, because it seems to differ between Doxygen versions
         m = test.match(line)
         if m:
             # Remove parameters from function name
@@ -126,7 +158,32 @@ class LogReader(object):
         
         '''
         retval = False
-        test = re.compile('(?P<full_path>.+):\d+:\s+warning:\s+Member\s+(?P<member_name>.+)\s+\((?P<member_type>%s)\) of (class|group|namespace)\s+(?P<class_name>.+)\s+is not documented' % (self.__MEMBER_TYPES), re.IGNORECASE)
+        test = re.compile('''
+                          (?P<full_path>                     # Start capturing a group called full_path
+                            .+                               #   It consists of one or more characters of any kind
+                          )                                  # Group ends
+                          :                                  # A literal colon
+                          \d+                                # One or more numbers
+                          :                                  # A literal colon
+                          \s+warning:\s+Member\s+            # An almost static string
+                          (?P<member_name>                   # Start capturing a group called member_name
+                            .+                               #   It consists of one or more characters of any kind
+                          )                                  # End group
+                          \s+                                # One or more whitespaces
+                          \(                                 # A literal (
+                          (?P<member_type>                   # Start capturing a group called member_type
+                            %s                               #   Possible values are listed in self.__MEMBER_TYPES
+                          )                                  # End group
+                          \)                                 # A literal )
+                          \sof\s(class|group|namespace|file) # An almost static string
+                          \s+                                # One or more whitespaces
+                          (?P<class_name>                    # Start capturing a group called class_name
+                            .+                               #   It consists of one or more characters of any kind
+                          )                                  # End of group
+                          \s+is\snot\sdocumented             # And a static string to end the line
+                          ''' 
+                          % (self.__MEMBER_TYPES),  
+                          re.IGNORECASE|re.VERBOSE)                            # Let's not worry about case, because it seems to differ between Doxygen versions
         m = test.match(line)
         if m:
             srcfile = os.path.basename(str(m.group('full_path')))
@@ -148,7 +205,27 @@ class LogReader(object):
         '''
         retval = False
         
-        test = re.compile('(?P<filename>.+):\d+:\s+warning: The following parameters of (?P<member_name>[^:]+)(::(?P<function_name>.+))* are not documented:', re.IGNORECASE)
+        test = re.compile('''
+                          (?P<filename>                                 # Capture a group called file_name
+                            .+                                          #   It consists of one more characters of any type
+                          )                                             # Line starts with full path and file name
+                          :                                             # A literal colon
+                          \d+                                           # One or more numbers (line number)
+                          :                                             # A literal colon
+                          \s+warning:\sThe\sfollowing\sparameters\sof\s # An almost static string
+                          (?P<member_name>                              # Capture a group called member_name
+                            [                                           #         
+                              ^:                                        #   Match anything but a colon (so finding a colon ends group)
+                            ]+                                          #   Match one or more characters
+                          )                                             # Group ends
+                          (                                             # In C++'s case:
+                            ::                                          #   Two colons
+                            (?P<function_name>                          #   Start another group called function_name
+                              .+                                        #     It consists on one or more alphanumeric characters
+                            )                                           #   End group
+                          )*                                            # But this is optional and does not apply to C
+                          \sare\snot\sdocumented:'''                           # String ends with static string
+                          , re.IGNORECASE|re.VERBOSE|re.DEBUG)                                  # Let's not worry about case, because it seems to differ between Doxygen versions
         m = test.match(line)
         if m:
             self.__state = 1
@@ -179,7 +256,28 @@ class LogReader(object):
         
         '''
         retval = False
-        test = re.compile('(?P<full_path>.+):\d+:\s+warning:\s+parameters of member\s+(?P<member_name>[^:]+)(::(?P<function_name>\w+))*\s+are not \(all\) documented', re.IGNORECASE)
+        test = re.compile('''
+                           (?P<full_path>                                  # Capture a group called full_path
+                             .+                                            #   It consists of one more characters of any type
+                           )                                               # Group ends                      
+                           :                                               # A literal colon
+                           \d+                                             # One or more numbers (line number)
+                           :                                               # A literal colon
+                           \s+warning:\s+parameters\sof\smember\s+         # An almost static string
+                           (?P<member_name>                                # Capture a group called member_name
+                             [                                             #   
+                               ^:                                          #   Match anything but a colon (so finding a colon ends group)
+                             ]+                                            #   Match one or more characters
+                           )                                               # Group ends
+                           (                                               # Start an unnamed group 
+                             ::                                            #   Two literal colons
+                             (?P<function_name>                            #   Start another group called function_name
+                               \w+                                         #     It consists on one or more alphanumeric characters
+                             )                                             #   End group
+                           )*                                              # This group is entirely optional and does not apply to C
+                           \s+are\snot\s\(all\)\sdocumented''',            # And line ends with an almost static string
+                           re.IGNORECASE|re.VERBOSE)                                 # Let's not worry about case, because it seems to differ between Doxygen versions
+                          
         m = test.match(line)
         
         if m:
@@ -225,7 +323,10 @@ class LogReader(object):
             parameter "param_name"
             
         '''
-        test = re.compile('\s+parameter \'(?P<param_name>.+)\'\n', re.IGNORECASE)
+        test = re.compile(('\s+parameter \'' +           # Static string
+                           '(?P<param_name>.+)' +        # Parameter name
+                           '\'\n'),                      # Static string
+                           re.IGNORECASE)
         m = test.match(line)
         if m:
             found = False
@@ -265,7 +366,19 @@ class LogReader(object):
         '''
         
         retval = False
-        test = re.compile('(?P<full_path>.+):\d+: warning: return type of member (?P<member_name>.+) is not documented', re.IGNORECASE)
+        test = re.compile('''
+                          (?P<full_path>                              # Start capturing a group called full_path
+                            .+                                        #   It consists of one more characters of any type
+                          )                                           # Group ends
+                          :                                           # A literal colon
+                          \d+                                         # One or more numbers
+                          :                                           # A literal colon
+                          \swarning:\sreturn\stype\sof\smember\s      # Almost static line
+                          (?P<member_name>                            # Start capturing a group called member_name 
+                            .+                                        #   It consists of one or more characters of any type
+                          )                                           # Group end
+                          \sis\snot\sdocumented''',                   # Almost static string to end the line 
+                          re.IGNORECASE|re.VERBOSE)                   # Let's not worry about case, because it seems to differ between Doxygen versions
         m = test.match(line)
         if m:
             if m.group('full_path').startswith('<'):
@@ -295,6 +408,12 @@ class LogReader(object):
             
         return retval
 
+    #def __parseInvalidParamCommand(self, line):
+    #    test = re.compile(('''(?P<full_path>.+):\d+: warning: argument \'(?P<param_name>.+)\' of command @param is not found in the argument list of (?P<member_name>[^:]+)(::(?P<function_name>\w+))*', re.IGNORECASE)
+    #    m = test.match(line)
+    #    if m:
+    #        pass
+        
     def __removeParameters(self, s):
         ''' 
         Picks up the function or variable name by removing everything else 
@@ -320,14 +439,46 @@ class LogReader(object):
         
         m = test.match(str(s))
         if m:
-            test = re.compile('(?P<member_name>(operator[=\-\+\*\[\]!&%]+))([\(\[].+[\)\]])*')
+            test = re.compile('''
+                                (?P<member_name>                   # Begin capturing a group called member_name
+                                  (                                #   Capture the operator name
+                                    operator                       #     Static string
+                                    [                              #
+                                      =\-\+\*\[\]!&%               #     Match operators =, -, +, *, [, ], !, & and %
+                                    ]                              #
+                                    +                              #   One or more times (i.e. will also capture !=, [], etc)
+                                  )                                #
+                                )                                  #
+                                (                                  # Capture the possible parameters
+                                  [                                #
+                                    \(\[                           #   Literal ( or [
+                                  ]                                #
+                                  .+                               #   Any character one or more times
+                                  [                                #
+                                    \)\]                           #   Literal ) or ]
+                                  ]                                #
+                                )*                                 # Zero or more times
+                              ''', re.IGNORECASE|re.VERBOSE)       # Let's not worry about case, because it seems to differ between Doxygen versions
             m2 = test.match(str(s))
             try:
                 retval = str(m2.group('member_name'))
             except AttributeError:
                 retval = ''
         else:       
-            test = re.compile('(?P<member_name>[a-zA-Z0-9_]+)([\(\[].+[\)\]])*')
+            test = re.compile('''
+                              (?P<member_name>    # Capture a group called member_name
+                                \w+               #   It consists of one or more alphanumerical characters
+                              )                   # 
+                              (                   # Capture possible parameters
+                                [                 # 
+                                  \(\[            #   A literal ( or [
+                                ]                 # 
+                                .+                #   One or more characters of any type
+                                [                 # 
+                                  \)\]            #   A literal ) or ]
+                                ]                 # 
+                              )*                  # Zero or more times
+                          ''')
             
             m2 = test.match(str(s))
             try:
@@ -368,8 +519,8 @@ class LogReader(object):
             
             # We check each possibility and handle the line inside the functions
             # if the line matches. 
-            if self.__parseMissingFileMember(line) == True:
-                return
+            #if self.__parseMissingFileMember(line) == True:
+            #    return
 
             if self.__parseMissingClassMember(line) == True:
                 return
