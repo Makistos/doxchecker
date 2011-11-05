@@ -5,10 +5,9 @@
 <pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">python</pydev_property>
 <pydev_property name="org.python.pydev.PYTHON_PROJECT_VERSION">python 2.6</pydev_property>
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
-<path>/DoxCheck/src</path>
+<path>/doxchecker/src</path>
 </pydev_pathproperty>
 <pydev_pathproperty name="org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH">
-<path>/usr/share/pyshared/lxml-2.2.4.egg-info</path>
 <path>/usr/lib/python2.6/dist-packages/lxml</path>
 <path>/usr/lib/python2.6/dist-packages</path>
 <path>/usr/lib/python2.6/dist-packages/yaml</path>

@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 import getopt
-from Reporter import Reporter
+from DoxCheck import Reporter
 from DoxLogReader import LogReader
 from yaml import load, dump
 
@@ -85,7 +85,7 @@ def __selectionTable(config, options):
         if config[conf_name] != None:
             decision +=2 
     else:
-        if config != None:
+        if config != None and len(config) > 0:
             if config['LAST'] != None:
                 decision += 2
 
@@ -161,7 +161,7 @@ def main(argv):
     try:
         f = open(config_file, "rw")
     except IOError:
-        f = open(config_file, "rw+")
+        f = open(config_file, "w+")
     config = load(f)
     f.close()
     if config == None:
