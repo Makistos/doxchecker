@@ -115,24 +115,25 @@ class LogReader(object):
         '''
         retval = False
         test = re.compile('''
-                          (?P<full_path>.+)                               # Line starts with full path and file name
-                          :
-                          \d+
-                          :
-                          \s+Warning:\s+Member\s+                       # Then a line number and static string
-                          (?P<member_name>
-                            .+
-                          )                                # Member name
-                          \s
-                          \(                                               # Space and open parentheses
-                          (?P<member_type>
-                            %s
-                          )                                # Member type which is matched with self.__MEMBER_TYPES
-                          \)
-                          \sof\sfile\s+                                    # Static string
-                          (?P<filename>
-                            .+
-                          )                                   # File name again
+                          (?P<full_path>                        # Start capture group full_path
+                          .+                                    #   It consists of characters of any kind
+                          )                                     # 
+                          :                                     # A literal colon
+                          \d+                                   # One more or numbers
+                          :                                     # A literal colon
+                          \s+Warning:\s+Member\s+               # A static string
+                          (?P<member_name>                      # Capture group member_name
+                            .+                                  #   It consists of characters of any kind
+                          )                                     #
+                          \s\(                                  # Space and open parentheses
+                          (?P<member_type>                      # Capture group member_type
+                            %s                                  #   Defined in self.__MEMBER_TYPES
+                          )                                     #
+                          \)                                    # Literal closing parentheses
+                          \sof\sfile\s+                         # Static string
+                          (?P<filename>                         # Capture group filename
+                            .+                                  #   It consists of characters of any kind
+                          )                                     #
                           \s+is\snot\sdocumented''' % (self.__MEMBER_TYPES), # And a static string to end the line
                           re.IGNORECASE|re.VERBOSE)                          # Let's not worry about case, because it seems to differ between Doxygen versions
         m = test.match(line)
@@ -323,10 +324,11 @@ class LogReader(object):
             parameter "param_name"
             
         '''
-        test = re.compile(('\s+parameter \'' +           # Static string
-                           '(?P<param_name>.+)' +        # Parameter name
-                           '\'\n'),                      # Static string
-                           re.IGNORECASE)
+        test = re.compile(('''\s+parameter '            # Static string
+                           '(?P<param_name>             # Start capture group param_name
+                             .+)                        #   Consisting of one of more characters of any type
+                           '\'\n'''),                   # It ends with a hyphen and EOL character
+                           re.IGNORECASE|re.VERBOSE)
         m = test.match(line)
         if m:
             found = False
