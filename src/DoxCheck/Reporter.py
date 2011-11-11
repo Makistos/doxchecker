@@ -6,12 +6,11 @@ Created on 30 Sep 2011
 
 from lxml import etree
 from XmlReader import XmlReader
-import copy
 import logging
 
 class Reporter(object):
     '''
-    classdocs
+    Matches errors in the log to the members in the XML index file and creates the resulting XML.
     '''            
 
     def addIssuesToXml(self):

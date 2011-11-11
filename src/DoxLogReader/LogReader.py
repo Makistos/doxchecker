@@ -497,7 +497,7 @@ class LogReader(object):
         '''
         # Following is useful for debugging. If a line is not caught, copy the contents to the first line and 
         # put a breakpoint to the line with the pass command.
-        if line.startswith("/home/poutima/albatross/LTE/LR2_beta/nomor/dev_3_ti/src/protocols/NOMOR_E_UTRA_S1-MME/protocol_data/rtconv.h:43: warning: return type of member rtBitStrToString is not documented"):
+        if line.startswith("/home/foo"):
             pass
         
         # An ugly parser for different kinds of lines in the Doxygen output log
@@ -514,16 +514,6 @@ class LogReader(object):
         # __state == 0 indicates that this line can be handled normally.
         if self.__state == 0:
             
-            #item = self.__lineTest(line)
-            #if item != None:
-            #    print ("Item: %s" % str(item))
-            #    return
-            
-            # We check each possibility and handle the line inside the functions
-            # if the line matches. 
-            #if self.__parseMissingFileMember(line) == True:
-            #    return
-
             if self.__parseMissingClassMember(line) == True:
                 return
 

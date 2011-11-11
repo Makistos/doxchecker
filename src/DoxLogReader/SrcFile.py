@@ -118,29 +118,3 @@ class SrcFile(object):
         # The classes that have missing members. Classes are defined as they are by Doxygen, so any lines
         # where Doxygen uses the word "class" is considered part of this.
         self.__classes = {}
-
-    # Debugging functions        
-    def fileSummary(self):
-        ''' 
-        Prints a summary of this file.
-        
-        Deprecated, the final output is every bit as useful.
-        '''
-        retval = ''
-
-        for member in self.__members.itervalues():
-            if member.memberType == 'function':
-                if member.isMissing == True:
-                    print("%s (%s) description" % (member.name, member.memberType))
-                if member.returnValueMissing == True:
-                    print("%s (%s) returnvaluemissing" % (member.name, member.memberType))
-                for param in member.parameters:
-                    print("%s (%s) param missing %s" % (member.name, member.memberType, param))
-            print("%s (%s)" % (member.name, member.memberType))         
-                         
-        return retval
-    
-    def updateMissingClasses(self):
-        for c in self.__classes.itervalues():
-            if c.name in self.__members:
-                c.isMissing = True
